@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<title>Caos do Robô 🤖</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%A4%96%3C/text%3E%3C/svg%3E">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div id="app">
+
+  <!-- ===================== TELA INICIAL ===================== -->
+  <section id="tela-inicio" class="tela ativa">
+    <div class="topo-inicio">
+      <div class="mascote-grande" id="mascoteInicio">🤖</div>
+      <h1>CAOS DO ROBÔ</h1>
+      <p class="subtitulo">Monte a máquina. Solte a bola. Vire bagunça!</p>
+    </div>
+    <div class="menu-inicio">
+      <button class="botao-grande botao-missoes" id="btnMissoes">
+        <span class="icone">🧩</span>
+        <span>Missões</span>
+      </button>
+      <button class="botao-grande botao-livre" id="btnLivre">
+        <span class="icone">🎉</span>
+        <span>Modo Caos Livre</span>
+      </button>
+      <button class="botao-grande botao-loja" id="btnLoja">
+        <span class="icone">🎩</span>
+        <span>Loja do Robô</span>
+      </button>
+    </div>
+    <div class="rodape-inicio">
+      <div class="pill">⭐ <span id="estrelasTotais">0</span></div>
+      <div class="pill">🪙 <span id="moedasTotais">0</span></div>
+      <button class="botao-mini" id="btnReset" title="Recomeçar progresso">↺</button>
+    </div>
+  </section>
+
+  <!-- ===================== SELEÇÃO DE FASES ===================== -->
+  <section id="tela-fases" class="tela">
+    <header class="cabecalho-sub">
+      <button class="botao-voltar" data-voltar="tela-inicio">‹</button>
+      <h2>Missões</h2>
+      <div class="pill">🪙 <span id="moedasFases">0</span></div>
+    </header>
+    <div class="grade-fases" id="gradeFases"></div>
+  </section>
+
+  <!-- ===================== LOJA ===================== -->
+  <section id="tela-loja" class="tela">
+    <header class="cabecalho-sub">
+      <button class="botao-voltar" data-voltar="tela-inicio">‹</button>
+      <h2>Loja do Robô</h2>
+      <div class="pill">🪙 <span id="moedasLoja">0</span></div>
+    </header>
+    <div class="mascote-preview" id="mascotePreview">🤖</div>
+    <div class="grade-loja" id="gradeLoja"></div>
+  </section>
+
+  <!-- ===================== TELA DE JOGO ===================== -->
+  <section id="tela-jogo" class="tela">
+    <header class="cabecalho-jogo">
+      <button class="botao-voltar" data-voltar="tela-anterior">‹</button>
+      <div id="infoMissao" class="info-missao">Modo Caos Livre</div>
+      <div class="hud-direita">
+        <div class="pill" id="hudCoins">🪙 <span id="moedasJogo">0</span></div>
+        <button class="botao-mini" id="btnLimpar" title="Limpar tabuleiro">🗑️</button>
+      </div>
+    </header>
+
+    <div class="area-jogo">
+      <canvas id="canvasJogo" width="720" height="960"></canvas>
+      <div id="mascoteJogo" class="mascote-jogo">🤖</div>
+    </div>
+
+    <div class="barra-caos" id="barraCaos">
+      <button class="botao-caos" id="btnCanhao">🚀 Canhão</button>
+      <button class="botao-caos destaque" id="btnCaosTotal">💥 CAOS TOTAL</button>
+    </div>
+
+    <div class="bandeja" id="bandeja"></div>
+
+    <div class="botoes-jogo">
+      <button class="botao-testar" id="btnTestar">▶ TESTAR</button>
+    </div>
+  </section>
+
+  <!-- ===================== MODAL DE RESULTADO ===================== -->
+  <div id="modalResultado" class="modal-fundo">
+    <div class="modal-caixa">
+      <div class="modal-mascote" id="modalMascote">🤖</div>
+      <h2 id="modalTitulo">Ihul!</h2>
+      <div class="estrelas-resultado" id="modalEstrelas">☆☆☆</div>
+      <div class="moedas-ganhas" id="modalMoedas">+0 🪙</div>
+      <div id="modalDesbloqueio" class="desbloqueio-item" style="display:none"></div>
+      <div class="modal-botoes">
+        <button class="botao-modal" id="btnTentarDeNovo">↺ De novo</button>
+        <button class="botao-modal principal" id="btnProximaFase">Próxima ▶</button>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script src="game.js"></script>
+</body>
+</html>
