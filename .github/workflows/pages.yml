@@ -22,6 +22,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - name: Conferir as fases
+        run: node tools/verificar-fases.js
       - name: Configurar o Pages
         uses: actions/configure-pages@v5
         with:

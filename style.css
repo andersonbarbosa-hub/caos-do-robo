@@ -148,20 +148,37 @@ html, body {
   align-items: center;
   gap: .3em;
 }
-.cartao-fase .num { font-size: 4vh; font-weight: 900; color: var(--amarelo); }
+.cartao-fase .num { font-size: 4vh; font-weight: 900; color: var(--cor-mundo, var(--amarelo)); }
+.cartao-fase:not(.bloqueada):active { transform: scale(.94); }
+.titulo-mundo {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  gap: .5em;
+  padding: 1.2vh 1em;
+  border-radius: 18px;
+  background: linear-gradient(90deg, color-mix(in srgb, var(--cor-mundo) 35%, transparent), transparent);
+  border-left: 6px solid var(--cor-mundo);
+  font-weight: 900;
+  font-size: 2.6vh;
+}
+.titulo-mundo:not(:first-child) { margin-top: 2vh; }
+.titulo-mundo .emoji-mundo { font-size: 1.5em; }
+.titulo-mundo .nome-mundo { flex: 1; }
+.titulo-mundo .pill { font-size: 1.8vh; }
+.titulo-mundo.bloqueado { filter: grayscale(.8); opacity: .6; }
 .cartao-fase .nome { font-size: 1.9vh; opacity: .9; min-height: 2.4em; }
 .cartao-fase .estrelas { font-size: 2.4vh; letter-spacing: .1em; }
 .cartao-fase.bloqueada { opacity: .4; }
 .cartao-fase.bloqueada .num::after { content: " 🔒"; }
 
+.loja-rolagem { flex: 1; overflow-y: auto; touch-action: pan-y; padding-bottom: 4vh; }
+.titulo-loja { margin: 1.5vh 4vw .5vh; font-size: 2.4vh; }
 .grade-loja {
-  flex: 1;
-  overflow-y: auto;
-  touch-action: pan-y;
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
   gap: 3vw;
-  padding: 1vh 4vw 4vh;
+  padding: 1vh 4vw;
 }
 .mascote-preview { text-align: center; font-size: 14vh; animation: flutuar 3s ease-in-out infinite; }
 .item-loja {
@@ -229,7 +246,32 @@ html, body {
   filter: drop-shadow(0 4px 6px rgba(0,0,0,.4));
 }
 
-.barra-caos { display: flex; gap: 2vw; justify-content: center; padding: 0 3vw 1vh; }
+.barra-caos { display: flex; gap: 2vw; justify-content: center; padding: 0 3vw 1vh; flex-wrap: wrap; }
+.escondida { display: none !important; }
+#btnDica { animation: brilho 2.4s ease-in-out infinite; }
+@keyframes brilho { 0%,100% { box-shadow: 0 0 0 rgba(255,224,102,0); } 50% { box-shadow: 0 0 14px rgba(255,224,102,.8); } }
+
+/* aviso rápido quando a bola não chega (sem janela pra fechar) */
+.aviso {
+  position: absolute;
+  left: 50%;
+  top: 40%;
+  transform: translate(-50%, -50%) scale(.6);
+  background: rgba(27,16,50,.92);
+  border: 3px solid var(--amarelo);
+  border-radius: 20px;
+  padding: 1.4vh 1.4em;
+  font-size: 2.6vh;
+  font-weight: 900;
+  text-align: center;
+  width: max-content;
+  max-width: 86%;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity .15s ease, transform .25s cubic-bezier(.2,1.6,.4,1);
+  z-index: 10;
+}
+.aviso.mostrar { opacity: 1; transform: translate(-50%, -50%) scale(1); }
 .barra-caos.escondida { display: none; }
 .botao-caos {
   border: none;
