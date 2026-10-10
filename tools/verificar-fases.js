@@ -2,7 +2,8 @@
 'use strict';
 /* Confere as fases simulando a física de verdade (sem tela):
      - sem nenhuma peça a fase NÃO pode passar;
-     - a solução `sol` (usada pela dica 💡) tem que passar.
+     - a solução `sol` (usada pela dica 💡) tem que passar;
+     - o banco da Fase Infinita (fases-geradas.js) também: vazio não passa, dica dá 3★.
    Com --buscar, testa todas as montagens possíveis e conta quantas dão
    1, 2 e 3 estrelas — ajuda a calibrar a dificuldade.
 
@@ -12,8 +13,8 @@ const fs = require('fs');
 const path = require('path');
 
 const raiz = path.join(__dirname, '..');
-const codigo = ['niveis.js', 'game.js'].map(f => fs.readFileSync(path.join(raiz, f), 'utf8')).join('\n') +
-  '\nglobalThis.__jogo = { state, NIVEIS, carregarNivel, tentarColocar, comecarRodada, passoFisica, podeColocar, PASSO, COLS, ROWS };';
+const codigo = ['niveis.js', 'fases-geradas.js', 'game.js', 'modos.js'].map(f => fs.readFileSync(path.join(raiz, f), 'utf8')).join('\n') +
+  '\nglobalThis.__jogo = { state, NIVEIS, BANCO_FASES, faseDoBanco, carregarNivel, carregarFase, tentarColocar, comecarRodada, passoFisica, podeColocar, PASSO, COLS, ROWS };';
 (0, eval)(codigo); // roda no contexto principal: bem mais rápido que vm
 const J = globalThis.__jogo;
 J.state.headless = true;
@@ -109,5 +110,26 @@ for (const i of lista) {
   if (!ok) { falhas++; linha += '   ❌'; }
   console.log(linha);
 }
+// banco da Fase Infinita e da Fase do Dia
+function simularFase(f, pecas) {
+  J.carregarFase(f);
+  for (const [tipo, row, col] of pecas) if (!J.tentarColocar(tipo, row, col)) return -1;
+  J.comecarRodada();
+  let passos = 0;
+  while (J.state.rodada && J.state.rodada.ativa && passos < 20 / J.PASSO) { J.passoFisica(J.PASSO); passos++; }
+  return J.state.ultimoResultado.estrelas;
+}
+if (!indices.length) {
+  for (const [dif, fases] of Object.entries(J.BANCO_FASES)) {
+    const ruins = [];
+    fases.forEach((_, n) => {
+      const f = J.faseDoBanco(dif, n);
+      if (simularFase(f, []) !== 0 || simularFase(f, f.sol) !== 3) ruins.push(n);
+    });
+    console.log(`🎲 ${dif.padEnd(7)} ${fases.length} fases` + (ruins.length ? `   ❌ com problema: ${ruins.join(', ')}` : '  ok'));
+    falhas += ruins.length;
+  }
+}
+
 if (falhas) { console.log(`\n${falhas} fase(s) com problema`); process.exit(1); }
 console.log('\nTodas as fases OK');

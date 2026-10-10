@@ -23,19 +23,52 @@
         <span class="icone">🧩</span>
         <span>Missões</span>
       </button>
+      <button class="botao-grande botao-infinito" id="btnInfinito">
+        <span class="icone">🎲</span>
+        <span>Fase Infinita</span>
+        <span class="selo" id="seloDia">📅 Fase do Dia!</span>
+      </button>
       <button class="botao-grande botao-livre" id="btnLivre">
         <span class="icone">🎉</span>
         <span>Modo Caos Livre</span>
       </button>
-      <button class="botao-grande botao-loja" id="btnLoja">
-        <span class="icone">🎩</span>
-        <span>Loja do Robô</span>
-      </button>
+      <div class="linha-menu">
+        <button class="botao-grande botao-criar" id="btnCriar">
+          <span class="icone">🛠️</span>
+          <span>Criar Fase</span>
+        </button>
+        <button class="botao-grande botao-loja" id="btnLoja">
+          <span class="icone">🎩</span>
+          <span>Loja</span>
+        </button>
+      </div>
     </div>
     <div class="rodape-inicio">
       <div class="pill">⭐ <span id="estrelasTotais">0</span></div>
       <div class="pill">🪙 <span id="moedasTotais">0</span></div>
       <button class="botao-mini" id="btnReset" title="Recomeçar progresso">↺</button>
+    </div>
+  </section>
+
+  <!-- ===================== FASE INFINITA ===================== -->
+  <section id="tela-infinito" class="tela">
+    <header class="cabecalho-sub">
+      <button class="botao-voltar" data-voltar="tela-inicio">‹</button>
+      <h2>Fase Infinita</h2>
+      <div class="pill">🪙 <span id="moedasInfinito">0</span></div>
+    </header>
+    <div class="conteudo-infinito">
+      <button class="cartao-dia" id="btnDia">
+        <span class="icone">📅</span>
+        <span class="titulo">Fase do Dia</span>
+        <span class="estrelas" id="estrelasDia">☆☆☆</span>
+        <span class="detalhe" id="sequenciaDia"></span>
+      </button>
+      <p class="explica">Fases novas sem fim. Escolha a dificuldade:</p>
+      <button class="botao-dificuldade facil" id="btnInf_facil"><span>🟢 Fácil</span><small id="numInf_facil">Fase 1</small></button>
+      <button class="botao-dificuldade medio" id="btnInf_medio"><span>🟡 Médio</span><small id="numInf_medio">Fase 1</small></button>
+      <button class="botao-dificuldade insano" id="btnInf_insano"><span>🔴 Insano</span><small id="numInf_insano">Fase 1</small></button>
+      <div class="pill total-infinito">⭐ <span id="estrelasInf">0</span> estrelas na Fase Infinita</div>
     </div>
   </section>
 
@@ -73,6 +106,8 @@
       <div id="infoMissao" class="info-missao">Modo Caos Livre</div>
       <div class="hud-direita">
         <button class="botao-mini" id="btnDica" title="Dica">💡</button>
+        <button class="botao-mini escondida" id="btnPular" title="Pular fase">⏭</button>
+        <button class="botao-mini escondida" id="btnCompartilhar" title="Mandar desafio">🔗</button>
         <div class="pill" id="hudCoins">🪙 <span id="moedasJogo">0</span></div>
         <button class="botao-mini" id="btnLimpar" title="Limpar tabuleiro">🗑️</button>
       </div>
@@ -88,6 +123,15 @@
       <button class="botao-caos" id="btnCanhao">🚀 Canhão</button>
       <button class="botao-caos" id="btnVirar">🙃 Virar</button>
       <button class="botao-caos destaque" id="btnCaosTotal">💥 CAOS TOTAL</button>
+    </div>
+
+    <div class="painel-editor escondida" id="painelEditor">
+      <div class="titulo-painel">
+        <span>🧩 Peças de quem vai jogar:</span>
+        <button class="botao-mini" id="btnApagarEditor" title="Começar outra fase">🆕</button>
+      </div>
+      <div class="pecas-editor" id="pecasEditor"></div>
+      <div class="dica-editor">Arraste ⬇ pro mapa · toque pra apagar · toque em cima pra 🎱 bola · embaixo pra 🧺 cesta</div>
     </div>
 
     <div class="bandeja" id="bandeja"></div>
@@ -112,9 +156,26 @@
     </div>
   </div>
 
+  <!-- ===================== MODAL DE COMPARTILHAR ===================== -->
+  <div id="modalCompartilhar" class="modal-fundo">
+    <div class="modal-caixa">
+      <div class="modal-mascote">🎁</div>
+      <h2>Mandar desafio</h2>
+      <label class="campo">Nome da fase<input id="nomeFase" maxlength="30" placeholder="Minha Fase"></label>
+      <label class="campo">Seu nome<input id="nomeAutor" maxlength="20" placeholder="Seu nome"></label>
+      <input id="linkFase" class="link-fase" readonly placeholder="o link aparece aqui">
+      <div class="modal-botoes">
+        <button class="botao-modal" id="btnFecharCompartilhar">Voltar</button>
+        <button class="botao-modal principal" id="btnMandar">🔗 Mandar</button>
+      </div>
+    </div>
+  </div>
+
 </div>
 
 <script src="niveis.js"></script>
+<script src="fases-geradas.js"></script>
 <script src="game.js"></script>
+<script src="modos.js"></script>
 </body>
 </html>

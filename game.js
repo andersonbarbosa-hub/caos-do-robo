@@ -98,6 +98,7 @@ const SHOP_ITEMS = [
   { id: 'abobora', emoji: '🎃', nome: 'Robô Abóbora', preco: 110 },
   { id: 'dragao', emoji: '🐉', nome: 'Dragão de Lava', preco: 150 },
   { id: 'ninja', emoji: '🥷', nome: 'Ninja Supremo', preco: 200 },
+  { id: 'rei', emoji: '🤴', nome: 'Rei do Caos', trofeu: 'todos' },
 ];
 const SHOP_BOLAS = [
   { id: 'padrao', emoji: null, nome: 'Bolinha', preco: 0 },
@@ -108,6 +109,9 @@ const SHOP_BOLAS = [
   { id: 'planeta', emoji: '🌍', nome: 'Planeta', preco: 60 },
   { id: 'coco', emoji: '💩', nome: 'Cocô', preco: 80 },
   { id: 'caveira', emoji: '💀', nome: 'Caveira', preco: 100 },
+  { id: 'estrela', emoji: '🌟', nome: 'Estrela', trofeu: 'oficina' },
+  { id: 'engrenagem', emoji: '⚙️', nome: 'Engrenagem', trofeu: 'fabrica' },
+  { id: 'fogo', emoji: '🔥', nome: 'Bola de Fogo', trofeu: 'vulcao' },
 ];
 
 /* -------------------------------- Save ---------------------------------- */
@@ -116,6 +120,8 @@ function padraoSave() {
   return {
     coins: 0, levelStars: {}, unlocked: BASE_DESBLOQUEADO.slice(),
     skinsOwned: ['robo'], skinEquipado: 'robo', bolasOwned: ['padrao'], bolaEquipada: 'padrao',
+    trofeus: [], infinito: { facil: 0, medio: 0, insano: 0 }, estrelasInfinito: 0,
+    diario: { dia: null, estrelas: 0 }, sequencia: { dia: null, dias: 0 }, rascunho: null, autor: '',
   };
 }
 function carregarSave() {
@@ -622,10 +628,13 @@ function montarMapa(niv) {
 }
 
 // prepara uma fase sem mexer na tela (usado também pelo verificador de fases)
-function carregarNivel(i) {
+function carregarNivel(i) { carregarFase(NIVEIS[i], i); }
+
+// fases fora da campanha (geradas, do dia, de link) usam índice -1
+function carregarFase(fase, indice = -1) {
   state.modo = 'missao';
-  state.nivelIndex = i;
-  state.nivelAtual = NIVEIS[i];
+  state.nivelIndex = indice;
+  state.nivelAtual = fase;
   state.gravidadeInvertida = false;
   montarMapa(state.nivelAtual);
   state.orcamentoRestante = Object.assign({}, state.nivelAtual.budget);
@@ -690,7 +699,11 @@ function nivelDesbloqueado(i) {
 }
 
 // grava estrelas e paga moedas só pelo que melhorou
+function mundoCompleto(m) { return m.fases.every(f => estrelasDaFase(f.indice) === 3); }
+function temTrofeu(id) { return id === 'todos' ? MUNDOS.every(m => state.save.trofeus.includes(m.id)) : state.save.trofeus.includes(id); }
+
 function registrarResultado(estrelas) {
+  if (state.nivelAtual.tipo) return registrarResultadoModo(estrelas); // modos.js
   const i = state.nivelIndex;
   const anterior = estrelasDaFase(i);
   const premio = { moedas: 0, desbloqueio: null, mundoNovo: null };
@@ -713,13 +726,22 @@ function registrarResultado(estrelas) {
   }
   const novo = MUNDOS.find(m => mundoDesbloqueado(m) && !mundosAntes.includes(m));
   if (novo) premio.mundoNovo = novo;
+  const mundo = state.nivelAtual.mundo;
+  if (mundoCompleto(mundo) && !state.save.trofeus.includes(mundo.id)) {
+    state.save.trofeus.push(mundo.id);
+    state.save.coins += 50; premio.moedas += 50;
+    premio.trofeu = mundo;
+  }
   salvarSave();
   return premio;
 }
 
 /* =============================== DESENHO =================================== */
+// fase desenhada: missão ou editor (no Caos Livre não tem)
+function faseNaTela() { return (state.modo === 'missao' || state.modo === 'editor') && state.nivelAtual; }
+
 function desenharFundo() {
-  const tema = state.modo === 'missao' ? state.nivelAtual.mundo.fundo : '#120a26';
+  const tema = faseNaTela() ? state.nivelAtual.mundo.fundo : '#120a26';
   ctx.fillStyle = tema;
   ctx.fillRect(0, 0, W, H);
   ctx.strokeStyle = 'rgba(255,255,255,0.045)';
@@ -748,7 +770,7 @@ function desenharBloqueadas() {
 }
 
 function desenharLancador() {
-  if (state.modo !== 'missao') return;
+  if (!faseNaTela()) return;
   for (const col of bolasDaFase(state.nivelAtual)) {
     ctx.save();
     ctx.translate(col * CELL + CELL / 2, CELL * 0.5);
@@ -761,7 +783,7 @@ function desenharLancador() {
 }
 
 function desenharCesta() {
-  const niv = state.modo === 'missao' ? state.nivelAtual : null;
+  const niv = faseNaTela() ? state.nivelAtual : null;
   const basketCol = niv ? niv.basketCol : 1;
   const x0 = basketCol * CELL, y0 = (ROWS - 1) * CELL;
   ctx.save();
@@ -1015,7 +1037,7 @@ function trocarTela(id) {
 
 function atualizarHudGeral() {
   document.getElementById('estrelasTotais').textContent = estrelasTotais();
-  for (const id of ['moedasTotais', 'moedasFases', 'moedasLoja', 'moedasJogo']) document.getElementById(id).textContent = state.save.coins;
+  for (const id of ['moedasTotais', 'moedasFases', 'moedasLoja', 'moedasJogo', 'moedasInfinito']) document.getElementById(id).textContent = state.save.coins;
   document.getElementById('estrelasFases').textContent = estrelasTotais();
 }
 
@@ -1029,7 +1051,7 @@ function renderFases() {
     titulo.style.setProperty('--cor-mundo', mundo.cor);
     const feitas = mundo.fases.reduce((s, f) => s + estrelasDaFase(f.indice), 0);
     titulo.innerHTML = `<span class="emoji-mundo">${mundo.emoji}</span><span class="nome-mundo">${mundo.nome}</span>` +
-      (aberto ? `<span class="pill">⭐ ${feitas}/${mundo.fases.length * 3}</span>`
+      (aberto ? `<span class="pill">${state.save.trofeus.includes(mundo.id) ? '🏆 ' : ''}⭐ ${feitas}/${mundo.fases.length * 3}</span>`
               : `<span class="pill">🔒 ${estrelasTotais()}/${mundo.precisa} ⭐</span>`);
     grade.appendChild(titulo);
     mundo.fases.forEach((niv, k) => {
@@ -1050,14 +1072,17 @@ function renderGradeLoja(idGrade, itens, donos, chaveEquipado, chaveDonos) {
   const grade = document.getElementById(idGrade);
   grade.innerHTML = '';
   itens.forEach(item => {
-    const dono = donos.includes(item.id);
+    const dono = donos.includes(item.id) || (item.trofeu && temTrofeu(item.trofeu));
     const equipado = state.save[chaveEquipado] === item.id;
     const div = document.createElement('div');
     div.className = 'item-loja' + (equipado ? ' equipado' : '');
     let botaoHtml;
     if (equipado) botaoHtml = `<span class="tag-equipado">EQUIPADO</span>`;
     else if (dono) botaoHtml = `<button data-acao="equipar">Usar</button>`;
-    else botaoHtml = `<button data-acao="comprar" ${state.save.coins < item.preco ? 'disabled' : ''}>🪙 ${item.preco}</button>`;
+    else if (item.trofeu) {
+      const m = MUNDOS.find(x => x.id === item.trofeu);
+      botaoHtml = `<button disabled>🏆 ${m ? m.emoji : '🔧🏭🌋'}</button>`;
+    } else botaoHtml = `<button data-acao="comprar" ${state.save.coins < item.preco ? 'disabled' : ''}>🪙 ${item.preco}</button>`;
     const emoji = item.emoji || '🟡';
     div.innerHTML = `<div class="emoji">${emoji}</div><div class="preco">${item.nome}</div>${botaoHtml}`;
     const btn = div.querySelector('button');
@@ -1088,6 +1113,7 @@ function getEmojiEquipado() {
 /* ============================== BANDEJA / DRAG =============================== */
 function atualizarBandeja() {
   elBandeja.innerHTML = '';
+  if (state.modo === 'editor') { bandejaEditor(); return; } // modos.js
   const tipos = state.modo === 'missao' ? Object.keys(state.nivelAtual.budget) : state.save.unlocked;
   ORDEM_BANDEJA.filter(t => tipos.includes(t)).forEach(tipo => {
     const def = GADGET_DEFS[tipo];
@@ -1111,7 +1137,7 @@ function iniciarArrasto(ev, tipo, origemEl) {
     fantasmaEl.className = 'peca-fantasma';
     document.body.appendChild(fantasmaEl);
   }
-  fantasmaEl.textContent = GADGET_DEFS[tipo].emoji;
+  fantasmaEl.textContent = GADGET_DEFS[tipo] ? GADGET_DEFS[tipo].emoji : EDITOR_ITENS[tipo].emoji;
   fantasmaEl.style.display = 'block';
   moverFantasma(ev.clientX, ev.clientY);
 
@@ -1125,7 +1151,8 @@ function iniciarArrasto(ev, tipo, origemEl) {
     fantasmaEl.style.display = 'none';
     origemEl.classList.remove('arrastando');
     const cel = coordParaCelula(e.clientX, e.clientY);
-    if (cel && !tentarColocar(tipo, cel.row, cel.col) && celulaValida(cel.row, cel.col)) tocarToc();
+    if (cel && state.modo === 'editor') editorColocar(tipo, cel.row, cel.col);
+    else if (cel && !tentarColocar(tipo, cel.row, cel.col) && celulaValida(cel.row, cel.col)) tocarToc();
     state.arrastando = null;
     state.cellHighlight = null;
   };
@@ -1144,13 +1171,15 @@ function coordParaCelula(clientX, clientY) {
 function atualizarDestaque(clientX, clientY) {
   const cel = coordParaCelula(clientX, clientY);
   if (!cel) { state.cellHighlight = null; return; }
-  state.cellHighlight = { row: cel.row, col: cel.col, valido: podeColocar(cel.row, cel.col) };
+  const valido = state.modo === 'editor' ? celulaValida(cel.row, cel.col) : podeColocar(cel.row, cel.col);
+  state.cellHighlight = { row: cel.row, col: cel.col, valido };
 }
 
 function aoTocarCanvas(ev) {
   if (state.arrastando || state.bloqueado) return;
   const cel = coordParaCelula(ev.clientX, ev.clientY);
   if (!cel) return;
+  if (state.modo === 'editor') { editorTocar(cel.row, cel.col); return; }
   removerGadget(cel.row, cel.col);
 }
 
@@ -1160,13 +1189,19 @@ function entrarTelaJogo(origem) {
   trocarTela('tela-jogo');
   elBarraCaos.classList.toggle('escondida', state.modo !== 'livre');
   elBtnDica.classList.toggle('escondida', state.modo !== 'missao' || !state.nivelAtual.sol);
+  const tipo = state.modo === 'missao' ? state.nivelAtual.tipo : null;
+  document.getElementById('btnPular').classList.toggle('escondida', tipo !== 'infinito');
+  document.getElementById('btnCompartilhar').classList.toggle('escondida', state.modo !== 'editor');
+  document.getElementById('btnLimpar').classList.toggle('escondida', state.modo === 'editor');
+  document.getElementById('painelEditor').classList.toggle('escondida', state.modo !== 'editor');
+  if (state.modo === 'editor') renderPainelEditor();
   elAviso.classList.remove('mostrar');
   atualizarBandeja();
   atualizarHudGeral();
 }
 
 function botaoTestarPronto() {
-  elBtnTestar.textContent = state.modo === 'missao' ? '▶ TESTAR' : '▶ Soltar Bola';
+  elBtnTestar.textContent = state.modo === 'missao' ? '▶ TESTAR' : state.modo === 'editor' ? '▶ Jogar minha fase' : '▶ Soltar Bola';
   elBtnTestar.classList.remove('rodando');
 }
 
@@ -1203,6 +1238,7 @@ function atualizarInfoLivre() {
 }
 
 function aoClicarTestar() {
+  if (state.modo === 'editor') { testarFaseEditor(); return; }
   if (state.modo === 'missao') {
     if (state.rodada) { // botão vira "Parar" durante a jogada
       limparRodada();
@@ -1239,15 +1275,17 @@ function mostrarResultado(estrelas, premio, r) {
   const extras = [];
   if (premio.desbloqueio) extras.push(`🎁 Peça nova no Caos Livre: ${premio.desbloqueio}!`);
   if (premio.mundoNovo) extras.push(`🗺️ Mundo novo: ${premio.mundoNovo.emoji} ${premio.mundoNovo.nome}!`);
+  if (premio.trofeu) extras.push(`🏆 TROFÉU ${premio.trofeu.emoji} ${premio.trofeu.nome}! Prêmio novo na loja!`);
+  if (premio.texto) extras.push(premio.texto);
   const elDesb = document.getElementById('modalDesbloqueio');
   elDesb.style.display = extras.length ? 'block' : 'none';
   elDesb.innerHTML = extras.join('<br>');
 
   const proxima = state.nivelIndex + 1;
   const temProxima = proxima < NIVEIS.length && nivelDesbloqueado(proxima);
-  document.getElementById('btnProximaFase').textContent = temProxima ? 'Próxima ▶' : '🗺️ Fases';
+  document.getElementById('btnProximaFase').textContent = state.nivelAtual.tipo ? textoProximaModo() : temProxima ? 'Próxima ▶' : '🗺️ Fases';
 
-  if (estrelas === 3) {
+  if (estrelas === 3 || premio.trofeu) {
     // 3 estrelas = festa de caos na tela
     reagirMascote('uau'); tocarFesta(); tremerTela(16);
     for (let k = 0; k < 6; k++) efeitoConfete(rnd(60, W - 60), rnd(H * 0.2, H * 0.7), 40);
@@ -1373,6 +1411,8 @@ function init() {
     btn.addEventListener('pointerup', () => {
       const destino = btn.dataset.voltar === 'tela-anterior' ? state.telaOrigem : btn.dataset.voltar;
       limparRodada();
+      if (state.modo === 'editor') salvarRascunho();
+      if (state.modo === 'missao' && state.nivelAtual && state.nivelAtual.tipo === 'teste') { abrirEditor(); return; }
       state.canhaoAtivo = false;
       fecharAviso();
       trocarTela(destino);
@@ -1396,6 +1436,7 @@ function init() {
   document.getElementById('btnTentarDeNovo').addEventListener('pointerup', () => { fecharModal(); });
   document.getElementById('btnProximaFase').addEventListener('pointerup', () => {
     fecharModal();
+    if (state.nivelAtual.tipo) { acaoProximaModo(); return; }
     const proxima = state.nivelIndex + 1;
     if (proxima < NIVEIS.length && nivelDesbloqueado(proxima)) iniciarMissao(proxima);
     else { trocarTela('tela-fases'); renderFases(); }
@@ -1403,6 +1444,7 @@ function init() {
 
   document.addEventListener('pointerdown', () => ctxAudio(), { once: true });
 
+  initModos(); // modos.js
   atualizarHudGeral();
   requestAnimationFrame(loop);
 }

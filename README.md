@@ -26,6 +26,15 @@ app instalado.
   - A física é sempre igual: a mesma montagem dá sempre o mesmo resultado.
   - **💡 Dica**: mostra onde vai uma peça. A primeira dica de cada fase é grátis, as outras custam 5 🪙.
   - Errou? Aparece um aviso rápido e já dá pra tentar de novo. ⏹ Parar interrompe a jogada.
+  - **🏆 Troféus**: 3 ⭐ em todas as fases de um mundo dá um troféu, 50 🪙 e
+    uma bola exclusiva na loja. Os três troféus liberam o robô 🤴 Rei do Caos.
+- **🎲 Fase Infinita**: centenas de fases geradas e testadas por computador, em
+  🟢 Fácil, 🟡 Médio e 🔴 Insano. Dá pra pular uma fase difícil.
+- **📅 Fase do Dia**: uma fase nova por dia (a mesma pra todo mundo) e uma
+  sequência 🔥 de dias seguidos.
+- **🛠️ Criar Fase**: monte o mapa, escolha as peças de quem vai jogar, passe
+  na sua própria fase pra provar que dá e mande o link de desafio. Quem abre
+  o link cai direto na fase.
 - **🎉 Modo Caos Livre**: sem regras, peças ilimitadas (as peças novas são liberadas
   nas missões), 🚀 Canhão de bolinhas, 🙃 Virar a gravidade, 💥 CAOS TOTAL e um
   placar de bolas na cesta.
@@ -45,7 +54,15 @@ node tools/verificar-fases.js            # nenhuma fase passa sem peças, toda d
 node tools/verificar-fases.js --buscar 8 # testa todas as montagens e conta as soluções
 ```
 
-O deploy roda essa verificação antes de publicar.
+O deploy roda essa verificação antes de publicar (inclui o banco da Fase Infinita).
+
+As fases da Fase Infinita e da Fase do Dia ficam em `fases-geradas.js`, criado pelo
+gerador (pode demorar alguns minutos por dificuldade):
+
+```bash
+node tools/gerar-fases.js medio 150 22 medio.json   # dificuldade, quantidade, semente, saída
+node tools/gerar-fases.js --juntar facil.json medio.json insano.json diario.json
+```
 
 ## Rodar localmente (opcional)
 
@@ -65,7 +82,10 @@ O terminal mostra o endereço da rede Wi-Fi pra abrir no tablet.
 index.html   # telas (início, fases, loja, jogo)
 style.css    # visual grande e colorido, pensado pra dedo, não mouse
 niveis.js    # mundos e fases
+fases-geradas.js  # banco da Fase Infinita e da Fase do Dia (gerado)
 game.js      # física, peças, missões, progressão — sem libs externas
+modos.js     # Fase Infinita, Fase do Dia, Criar Fase e desafio por link
 tools/verificar-fases.js  # simula as fases sem tela pra conferir se dá pra passar
+tools/gerar-fases.js      # gera fases novas e testa cada uma antes de aceitar
 serve.js     # servidor estático opcional, sem dependências, uso local
 ```
